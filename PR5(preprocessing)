@@ -1,0 +1,79 @@
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+data = {
+    "Pclass": [1, 2, 3, 1, 2, 3, 1, 2, 3, 1],
+    "Sex": ["male", "female", "male", "female", "male",
+            "female", "male", "female", "male", "female"],
+    "Age": [22, 25, 30, 35, 28, 20, 40, 32, 18, 45],
+    "SibSp": [1, 0, 0, 1, 0, 1, 0, 0, 2, 1],
+    "Parch": [0, 0, 0, 1, 0, 0, 1, 0, 1, 0],
+    "Fare": [50, 30, 10, 80, 25, 15, 60, 35, 12, 90],
+    "Embarked": ["S", "C", "S", "S", "C", "Q", "S", "C", "Q", "S"],
+    "Survived": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1]
+}
+
+df = pd.DataFrame(data)
+
+print("Shape:", df.shape)
+print("\nMissing Values:\n", df.isnull().sum())
+print("\nDuplicate Rows:", df.duplicated().sum())
+
+df = df.drop_duplicates()
+
+features = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+X = df[features]
+y = df["Survived"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42
+)
+
+num_cols = ["Pclass", "Age", "SibSp", "Parch", "Fare"]
+cat_cols = ["Sex", "Embarked"]
+
+num_pipe = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+
+cat_pipe = Pipeline([
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("encoder", OneHotEncoder(handle_unknown="ignore"))
+])
+
+preprocessor = ColumnTransformer([
+    ("num", num_pipe, num_cols),
+    ("cat", cat_pipe, cat_cols)
+])
+
+X_train_processed = preprocessor.fit_transform(X_train)
+X_test_processed = preprocessor.transform(X_test)
+
+print("\nStatistics:\n", df[num_cols].describe())
+
+plt.hist(df["Age"], bins=5)
+plt.title("Age Histogram")
+plt.show()
+
+plt.hist(df["Fare"], bins=5)
+plt.title("Fare Histogram")
+plt.show()
+
+plt.boxplot(df["Age"])
+plt.title("Age Boxplot")
+plt.show()
+
+plt.boxplot(df["Fare"])
+plt.title("Fare Boxplot")
+plt.show()
+
+print("\nTraining Shape:", X_train.shape)
+print("Testing Shape:", X_test.shape)
