@@ -1,39 +1,31 @@
 
+def get_sensor_data(t, m, l, s, o):
+    return {"Temperature":t, "Motion":m, "Light":l, "Smoke":s, "Occupancy":o}
 
-def smart_home_agent(lux: int, temperature: float, occupied: bool) -> tuple[str, str]:
-    """Return (light, fan) actions from current sensor readings."""
-    if not occupied:
-        return "OFF", "OFF"
+def smart_home_agent(d):
+    return {
+        "AC": "ON" if d["Temperature"] > 30 else "OFF",
+        "Lights": "ON" if d["Motion"] and d["Light"] == "Dark" else "OFF",
+        "Alarm": "ON" if d["Smoke"] else "OFF",
+        "Door": "LOCKED" if not d["Occupancy"] else "UNLOCKED"
+    }
 
-    light = "ON" if lux < 300 else "OFF"
-    if temperature > 30:
-        fan = "HIGH"
-    elif temperature > 26:
-        fan = "LOW"
-    else:
-        fan = "OFF"
-    return light, fan
+def display_status(d, a):
+    print("\nSMART HOME STATUS REPORT")
+    print("Sensors:", d)
+    print("Actions:", a)
 
+def main():
+    print("SMART HOME INTELLIGENT AGENT")
 
-def main() -> None:
-    print("Smart Home Agent — Light and Fan")
-    print("PEAS: Performance=comfort and low energy; Environment=one room;")
-    print("      Actuators=light and fan; Sensors=lux, temperature, occupancy.\n")
+    t = float(input("Temperature: "))
+    m = input("Motion (yes/no): ").lower() == "yes"
+    l = input("Light (Dark/Bright): ").capitalize()
+    s = input("Smoke (yes/no): ").lower() == "yes"
+    o = input("Occupancy (yes/no): ").lower() == "yes"
 
-    try:
-        lux = int(input("Ambient light (lux): "))
-        temperature = float(input("Temperature (°C): "))
-        occupied = input("Is anyone in the room? (y/n): ").strip().lower() in {"y", "yes"}
-        if lux < 0:
-            raise ValueError("Lux cannot be negative.")
+    d = get_sensor_data(t, m, l, s, o)
+    a = smart_home_agent(d)
+    display_status(d, a)
 
-        light, fan = smart_home_agent(lux, temperature, occupied)
-        print("\nAgent actions:")
-        print(f"  Light: {light}")
-        print(f"  Fan:   {fan}")
-    except ValueError as error:
-        print(f"Invalid input: {error}")
-
-
-if __name__ == "__main__":
-    main()
+main()
