@@ -1,0 +1,46 @@
+
+facts = {"fever", "cough", "fatigue", "occupancy"}
+
+rules = [
+    (["fever", "cough"], "flu_like"),
+    (["flu_like", "fatigue"], "rest_recommended"),
+    (["fever", "rash"], "consult_advisor"),
+    (["smoke_detected"], "fire_alert"),
+    (["fire_alert", "occupancy"], "evacuation_required")
+]
+
+# Forward Chaining
+def forward(goal):
+    known = facts.copy()
+
+    while True:
+        old = len(known)
+
+        for p, c in rules:
+            if all(x in known for x in p):
+                known.add(c)
+
+        if len(known) == old:
+            break
+
+    return goal in known
+
+
+# Backward Chaining
+def backward(goal):
+    if goal in facts:
+        return True
+
+    for p, c in rules:
+        if c == goal:
+            if all(backward(x) for x in p):
+                return True
+
+    return False
+
+
+# Main
+goal = input("Enter goal: ")
+
+print("Forward Chaining:", forward(goal))
+print("Backward Chaining:", backward(goal))
