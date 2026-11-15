@@ -1,0 +1,105 @@
+
+def get_sensor_data(temperature, motion, light, smoke, occupancy):
+    sensor_data = {
+        "Temperature": temperature,
+        "Motion": motion,
+        "Light": light,
+        "Smoke": smoke,
+        "Occupancy": occupancy
+    }
+    return sensor_data
+
+def smart_home_agent(sensor_data):
+    action = {}
+
+    # Rule 1: Temperature control
+    if sensor_data["Temperature"] > 30:
+        action["AC"] = "ON"
+    else:
+        action["AC"] = "OFF"
+
+    # Rule 2: Lighting control
+    if sensor_data["Motion"] and sensor_data["Light"] == "Dark":
+        action["Lights"] = "ON"
+    else:
+        action["Lights"] = "OFF"
+
+    # Rule 3: Fire safety
+    if sensor_data["Smoke"]:
+        action["Alarm"] = "ON"
+    else:
+        action["Alarm"] = "OFF"
+
+    # Rule 4: Door security
+    if not sensor_data["Occupancy"]:
+        action["Door"] = "LOCKED"
+    else:
+        action["Door"] = "UNLOCKED"
+
+    return action
+
+def display_status(sensor_data, action_data):
+    """
+    Displays the Smart Home Report: sensor readings + actions taken.
+    """
+    print("\n" + "=" * 50)
+    print("           SMART HOME STATUS REPORT")
+    print("=" * 50)
+
+    print("\n--- SENSOR READINGS ---")
+    for key, value in sensor_data.items():
+        print(f"{key:<12}: {value}")
+
+    print("\n--- ACTIONS TAKEN ---")
+    for key, value in action_data.items():
+        print(f"{key:<12}: {value}")
+
+    print("=" * 50)
+def main():
+    print("SMART HOME INTELLIGENT AGENT - PEAS DEMONSTRATION")
+
+    # Test Case 1: Hot day, motion in dark room, no smoke, occupied
+    print("\n[TEST CASE 1] Hot afternoon, someone home, room dark")
+    sensors_1 = get_sensor_data(
+        temperature=34, motion=True, light="Dark",
+        smoke=False, occupancy=True
+    )
+    actions_1 = smart_home_agent(sensors_1)
+    display_status(sensors_1, actions_1)
+
+    # Test Case 2: Cool temperature, no motion, bright, no one home
+    print("\n[TEST CASE 2] Cool night, house empty, room bright")
+    sensors_2 = get_sensor_data(
+        temperature=22, motion=False, light="Bright",
+        smoke=False, occupancy=False
+    )
+    actions_2 = smart_home_agent(sensors_2)
+    display_status(sensors_2, actions_2)
+
+    # Test Case 3: Emergency - smoke detected
+    print("\n[TEST CASE 3] Smoke detected - emergency scenario")
+    sensors_3 = get_sensor_data(
+        temperature=28, motion=True, light="Dark",
+        smoke=True, occupancy=True
+    )
+    actions_3 = smart_home_agent(sensors_3)
+    display_status(sensors_3, actions_3)
+
+    # Test Case 4: Interactive user input
+    print("\n[TEST CASE 4] Enter your own sensor values")
+    try:
+        temp = float(input("Enter Temperature (°C): "))
+        motion_in = input("Motion detected? (yes/no): ").strip().lower() == "yes"
+        light_in = input("Light condition (Dark/Bright): ").strip().capitalize()
+        smoke_in = input("Smoke detected? (yes/no): ").strip().lower() == "yes"
+        occ_in = input("Is house occupied? (yes/no): ").strip().lower() == "yes"
+
+        sensors_4 = get_sensor_data(temp, motion_in, light_in, smoke_in, occ_in)
+        actions_4 = smart_home_agent(sensors_4)
+        display_status(sensors_4, actions_4)
+    except (EOFError, ValueError):
+        print("Skipping interactive input (no input stream available).")
+
+
+if __name__ == "__main__":
+    main()
