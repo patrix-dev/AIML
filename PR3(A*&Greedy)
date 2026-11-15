@@ -246,9 +246,8 @@ greedy_path, greedy_cost = greedy(start, goal)
 astar_path, astar_cost = astar(start, goal)
 
 
-print("-----------------------------")
 print("GREEDY BEST-FIRST SEARCH")
-print("-----------------------------")
+
 
 if greedy_path:
     print("Path:", " -> ".join(greedy_path))
@@ -257,9 +256,7 @@ else:
     print("No path found")
 
 
-print("\n-----------------------------")
 print("A* SEARCH")
-print("-----------------------------")
 
 if astar_path:
     print("Path:", " -> ".join(astar_path))
