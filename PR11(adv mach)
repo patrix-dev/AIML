@@ -1,0 +1,96 @@
+
+import pandas as pd
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+
+data = load_breast_cancer(as_frame=True)
+X, y = data.data, data.target
+
+print("Dataset shape:", X.shape)
+print("Class distribution:\n", y.value_counts())
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42, stratify=y
+)
+
+models = {
+    "SVM": Pipeline([
+        ("scaler", StandardScaler()),
+        ("classifier", SVC())
+    ]),
+    "Random Forest": RandomForestClassifier(
+        n_estimators=100, random_state=42
+    ),
+    "AdaBoost": AdaBoostClassifier(
+        n_estimators=50, learning_rate=1.0, random_state=42
+    )
+}
+
+def evaluate(y_true, y_pred):
+    return {
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Precision": precision_score(y_true, y_pred, average="weighted", zero_division=0),
+        "Recall": recall_score(y_true, y_pred, average="weighted", zero_division=0),
+        "F1-Score": f1_score(y_true, y_pred, average="weighted", zero_division=0),
+        "Confusion Matrix": confusion_matrix(y_true, y_pred)
+    }
+
+rows = []
+
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    pred = model.predict(X_test)
+
+    result = evaluate(y_test, pred)
+
+    rows.append({
+        "Model": name,
+        **{k: result[k] for k in ["Accuracy", "Precision", "Recall", "F1-Score"]}
+    })
+
+    print("\n", name, "confusion matrix:\n", result["Confusion Matrix"])
+
+print("\nBaseline comparison")
+print(pd.DataFrame(rows).round(4).to_string(index=False))
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+cv_scores = cross_val_score(
+    models["SVM"], X_train, y_train,
+    cv=cv, scoring="f1_weighted"
+)
+
+print("\nSVM CV scores:", cv_scores)
+print("SVM mean CV F1:", cv_scores.mean())
+
+param_grid = {
+    "classifier__C": [0.1, 1, 10],
+    "classifier__kernel": ["linear", "rbf"],
+    "classifier__gamma": ["scale", "auto"]
+}
+
+grid = GridSearchCV(
+    models["SVM"], param_grid,
+    scoring="f1_weighted", cv=cv, n_jobs=-1
+)
+
+grid.fit(X_train, y_train)
+
+print("\nBest parameters:", grid.best_params_)
+print("Best CV score:", grid.best_score_)
+
+best_pred = grid.best_estimator_.predict(X_test)
+best_result = evaluate(y_test, best_pred)
+
+print("Tuned SVM test metrics:", {
+    k: round(v, 4)
+    for k, v in best_result.items()
+    if k != "Confusion Matrix"
+})
+
+print("Tuned SVM confusion matrix:\n", best_result["Confusion Matrix"])
