@@ -1,0 +1,268 @@
+import heapq
+
+graph = {
+    'A': [('B', 1), ('C', 4)],
+    'B': [('D', 2), ('E', 5)],
+    'C': [('F', 3)],
+    'D': [('G', 1)],
+    'E': [('G', 2)],
+    'F': [('G', 2)],
+    'G': []
+}
+
+h = {
+    'A': 7,
+    'B': 6,
+    'C': 4,
+    'D': 2,
+    'E': 3,
+    'F': 2,
+    'G': 0
+}
+
+def get_path(parent, goal):
+    path = []
+
+    while goal is not None:
+        path.append(goal)
+        goal = parent[goal]
+
+    return path[::-1]
+
+
+def get_cost(path):
+    cost = 0
+
+    for i in range(len(path) - 1):
+        current = path[i]
+        next_node = path[i + 1]
+
+        for neighbor, edge_cost in graph[current]:
+            if neighbor == next_node:
+                cost += edge_cost
+                break
+
+    return cost
+
+
+def greedy(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (h[start], start))
+
+    parent = {start: None}
+    closed = set()
+
+    while open_list:
+        _, node = heapq.heappop(open_list)
+
+        if node == goal:
+            path = get_path(parent, goal)
+            cost = get_cost(path)
+            return path, cost
+
+        if node in closed:
+            continue
+
+        closed.add(node)
+
+        for neighbor, cost in graph[node]:
+            if neighbor not in closed:
+                parent[neighbor] = node
+
+                heapq.heappush(
+                    open_list,
+                    (h[neighbor], neighbor)
+                )
+
+    return None, None
+
+
+def astar(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (h[start], start))
+
+    parent = {start: None}
+    g = {start: 0}
+
+    while open_list:
+        _, node = heapq.heappop(open_list)
+
+        if node == goal:
+            path = get_path(parent, goal)
+            return path, g[node]
+
+        for neighbor, cost in graph[node]:
+            new_g = g[node] + cost
+
+            if neighbor not in g or new_g < g[neighbor]:
+                g[neighbor] = new_g
+                parent[neighbor] = node
+                f = new_g + h[neighbor]
+
+                heapq.heappush(
+                    open_list,
+                    (f, neighbor)
+                )
+
+    return None, None
+
+
+start = 'A'
+goal = 'G'
+
+greedy_path, greedy_cost = greedy(start, goal)
+
+print("Greedy Best-First Search")
+print("Path:", greedy_path)
+print("Cost:", greedy_cost)
+
+astar_path, astar_cost = astar(start, goal)
+
+print("\nA* Search")
+print("Path:", astar_path)
+print("Cost:", astar_cost)
+
+
+import heapq
+
+graph = {}
+n = int(input("Enter number of nodes: "))
+nodes = []
+
+for i in range(n):
+    node = input("Enter node: ")
+    nodes.append(node)
+    graph[node] = []
+
+e = int(input("Enter number of edges: "))
+
+print("Enter edges: source destination cost")
+
+for i in range(e):
+    u, v, cost = input("Edge: ").split()
+    cost = int(cost)
+    graph[u].append((v, cost))
+
+h = {}
+
+print("\nEnter heuristic values:")
+
+for node in nodes:
+    h[node] = int(input("h(" + node + ") = "))
+
+start = input("\nEnter start node: ")
+goal = input("Enter goal node: ")
+
+
+def get_path(parent, goal):
+    path = []
+
+    while goal is not None:
+        path.append(goal)
+        goal = parent[goal]
+
+    return path[::-1]
+
+
+def get_cost(path):
+    total = 0
+
+    for i in range(len(path) - 1):
+        current = path[i]
+        next_node = path[i + 1]
+
+        for neighbor, cost in graph[current]:
+            if neighbor == next_node:
+                total += cost
+                break
+
+    return total
+
+
+def greedy(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (h[start], start))
+
+    parent = {start: None}
+    closed = set()
+
+    while open_list:
+        _, node = heapq.heappop(open_list)
+
+        if node == goal:
+            path = get_path(parent, goal)
+            cost = get_cost(path)
+            return path, cost
+
+        if node in closed:
+            continue
+
+        closed.add(node)
+
+        for neighbor, cost in graph[node]:
+
+            if neighbor not in closed and neighbor not in parent:
+                parent[neighbor] = node
+
+                heapq.heappush(
+                    open_list,
+                    (h[neighbor], neighbor)
+                )
+
+    return None, None
+
+
+def astar(start, goal):
+    open_list = []
+    heapq.heappush(open_list, (h[start], start))
+
+    parent = {start: None}
+    g = {start: 0}
+
+    while open_list:
+        f, node = heapq.heappop(open_list)
+
+        if node == goal:
+            path = get_path(parent, goal)
+            return path, g[node]
+
+        for neighbor, cost in graph[node]:
+            new_g = g[node] + cost
+
+            if neighbor not in g or new_g < g[neighbor]:
+                g[neighbor] = new_g
+                parent[neighbor] = node
+                f = new_g + h[neighbor]
+
+                heapq.heappush(
+                    open_list,
+                    (f, neighbor)
+                )
+
+    return None, None
+
+
+greedy_path, greedy_cost = greedy(start, goal)
+astar_path, astar_cost = astar(start, goal)
+
+
+print("-----------------------------")
+print("GREEDY BEST-FIRST SEARCH")
+print("-----------------------------")
+
+if greedy_path:
+    print("Path:", " -> ".join(greedy_path))
+    print("Cost:", greedy_cost)
+else:
+    print("No path found")
+
+
+print("\n-----------------------------")
+print("A* SEARCH")
+print("-----------------------------")
+
+if astar_path:
+    print("Path:", " -> ".join(astar_path))
+    print("Cost:", astar_cost)
+else:
+    print("No path found")
